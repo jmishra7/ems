@@ -69,15 +69,6 @@ public class TodoRestController {
         return ResponseEntity.created(new URI(todoReq.getUrl())).body(todoReq);
     }
     
-    @PatchMapping("{uid}")
-    public ResponseEntity<Todo> update(HttpServletRequest req, @PathVariable(value = "uid") String uid, @RequestBody Todo todoReq) 
-    throws URISyntaxException {
-        todoReq.setUuid(UUID.fromString(uid));
-        todoReq.setUrl(req.getRequestURL().toString());
-        repo.save(mapAsTodoEntity(todoReq));
-        return ResponseEntity.accepted().body(todoReq);
-    }
-    
     @DeleteMapping("{uid}")
     public ResponseEntity<Void> deleteById(@PathVariable(value = "uid") String uid) {
         if (!repo.existsById(UUID.fromString(uid))) {

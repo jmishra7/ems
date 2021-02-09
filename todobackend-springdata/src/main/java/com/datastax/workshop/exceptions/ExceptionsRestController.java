@@ -17,17 +17,15 @@ import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.datastax.workshop.todo.Todo;
+import com.datastax.workshop.todo.TodoEntity;
+import com.sun.jdi.event.ExceptionEvent;
+import org.apache.commons.collections.iterators.FilterIterator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @CrossOrigin(
@@ -38,7 +36,8 @@ import org.springframework.web.bind.annotation.RestController;
 )
 @RequestMapping("/api/v1/exceptions/")
 public class ExceptionsRestController {
-    
+
+    @Autowired
     private ExceptionsRepositoryCassandra repo;
 
     public ExceptionsRestController(ExceptionsRepositoryCassandra exceptionsRepo) {
@@ -46,13 +45,41 @@ public class ExceptionsRestController {
     }
 
 
-     @GetMapping
+    @GetMapping
     public List<ExceptionsEntity> findAll(HttpServletRequest req) {
          List<ExceptionsEntity> exceptions = new ArrayList<>();
-         repo.findAll().forEach(e->exceptions.add(e));
+        exceptions.addAll(repo.findAll());
          return exceptions;
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ExceptionsEntity> findById(HttpServletRequest req, @PathVariable(value = "id") String rundateerrorcode) {
+        var e = repo.findById(rundateerrorcode);
+        if (e.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(e.get());
+    }
+
+    @GetMapping("/{rundate}/{errorcode}")
+    public ResponseEntity<ExceptionsEntity> findById(HttpServletRequest req, @PathVariable(value = "rundate") String rundate,
+                                                     @PathVariable(value = "errorcode") String errorcode) {
+        var e = repo.findById(rundate + errorcode);
+        if (e.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(e.get());
+    }
+
+
+    @PostMapping
+    public ResponseEntity<Void> create(HttpServletRequest req, @RequestBody List<ExceptionsEntity> exceptionsReq)
+            throws URISyntaxException {
+        repo.saveAll(exceptionsReq);
+        return new ResponseEntity<>(HttpStatus.CREATED);
 
     }
+
 
 
 }
